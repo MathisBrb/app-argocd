@@ -6,23 +6,6 @@ metadata:
 spec:
   project: monitoring
   source:
-    repoURL: git@github.com:ton-org/infra-monitoring.git  # Ton repo SSH !
-    targetRevision: main
-    path: apps/kube-prometheus-stack
-    helm:
-      releaseName: kps
-      valueFiles:
-        - values-prod.yaml
-      parameters:
-        - name: prometheusOperator.prometheus.prometheusSpec.serviceMonitorSelectorNilUsesHelmValues
-          value: "false"
-  destination:
-    server: https://kubernetes.default.svc
-    namespace: monitoring
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
-    syncOptions:
-      - CreateNamespace=true
-      - ServerSideApply=true
+    repoURL: https://github.com/MathisBrb/app-argocd.git
+    targetRevision
+
