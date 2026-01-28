@@ -1,0 +1,36 @@
+grafana:
+  adminUser: admin
+  adminPassword: "change-me-prod-strong-password"
+  service:
+    type: LoadBalancer  # MetalLB assignera IP
+    annotations:
+      metallb.universe.tf/address-pool: prod-pool  # Adapte ton pool
+  persistence:
+    enabled: true
+    size: 10Gi
+    storageClass: "standard"  # Ou ton Cinder/OpenStack
+
+prometheus:
+  prometheusSpec:
+    retention: 30d
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: "standard"
+          resources:
+            requests:
+              storage: 50Gi
+    resources:
+      requests:
+        cpu: 500m
+        memory: 2Gi
+
+prometheusOperator:
+  kubelet:
+    serviceMonitor:
+      https: false  # k3s souvent HTTP
+
+alertmanager:
+  enabled: true
+  service:
+    type: LoadBalancer

@@ -1,0 +1,27 @@
+configuration:
+  provider: aws  # Restic = aws:s3 compatible
+  backupStorageLocation:
+    bucket: velero-repo  # Nom logique
+    config:
+      region: us-east-1  # Dummy pour restic
+      s3ForcePathStyle: "true"
+      s3Url: "sftp://backup-server-ip-or-hostname:22/backup/velero-repo"  # Ton serveur Debian !
+  volumeSnapshotLocation:
+    config:
+      region: us-east-1  # CSI Cinder snapshots
+
+credentials:
+  useSecret: true  # SSH key dans Secret
+
+initContainers:
+  - name: velero-plugin-for-aws
+    image: velero/velero-plugin-for-aws:v1.10.0  # Restic
+    volumeMounts:
+      - mountPath: /target
+        name: plugins
+
+serviceAccount:
+  create: true
+  name: velero
+  annotations:
+    iam.amazonaws.com/role: "dummy"  # Ignoré pour restic

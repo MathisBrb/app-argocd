@@ -1,0 +1,16 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: monitoring
+  namespace: argocd
+spec:
+  description: Monitoring K8s OpenStack
+  sourceRepos:
+    - '*'  # Ou juste ton repo + helm-charts
+    - https://prometheus-community.github.io/helm-charts
+  destinations:
+    - namespace: monitoring
+      server: https://kubernetes.default.svc
+  clusterResourceWhitelist:
+    - group: '*'
+      kind: '*'

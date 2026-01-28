@@ -1,0 +1,27 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: velero
+  namespace: argocd
+spec:
+  project: monitoring
+  source:
+    repoURL: git@github.com:MathisP-afk/Triforce-K8S-automatisation.git
+    targetRevision: main
+    path: apps/velero
+    helm:
+      repoURL: https://vmware-tanzu.github.io/helm-charts
+      chart: velero
+      targetRevision: 7.2.0  # Stable
+      valueFiles:
+        - values-prod.yaml
+      releaseName: velero
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: velero
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
