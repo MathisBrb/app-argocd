@@ -665,6 +665,8 @@ spec:
           mountPath: /etc/grafana/provisioning/datasources
         - name: dashboard-provider
           mountPath: /etc/grafana/provisioning/dashboards
+        - name: dashboards
+          mountPath: /var/lib/grafana/dashboards
       volumes:
       - name: storage
         emptyDir: {}
@@ -674,6 +676,9 @@ spec:
       - name: dashboard-provider
         configMap:
           name: grafana-dashboard-provider
+      - name: dashboards
+        configMap:
+          name: grafana-dashboard-kubernetes
 ---
 # Grafana Service
 apiVersion: v1
