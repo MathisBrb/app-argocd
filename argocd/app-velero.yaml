@@ -5,17 +5,19 @@ metadata:
   namespace: argocd
 spec:
   project: monitoring
-  source:
-    repoURL: git@github.com:MathisP-afk/Triforce-K8S-automatisation.git
-    targetRevision: main
-    path: apps/velero
-    helm:
-      repoURL: https://vmware-tanzu.github.io/helm-charts
+  sources:
+    # Source 1: Helm chart Velero
+    - repoURL: https://vmware-tanzu.github.io/helm-charts
       chart: velero
-      targetRevision: 7.2.0  # Stable
-      valueFiles:
-        - values-prod.yaml
-      releaseName: velero
+      targetRevision: 7.2.0
+      helm:
+        releaseName: velero
+        valueFiles:
+          - $values/apps/velero/values-prod.yaml
+    # Source 2: Repo Git contenant les values et le secret
+    - repoURL: git@github.com:MathisBrb/app-argocd.git
+      targetRevision: main
+      ref: values
   destination:
     server: https://kubernetes.default.svc
     namespace: velero
