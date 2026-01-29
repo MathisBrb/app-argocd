@@ -97,6 +97,10 @@ spec:
         app: prometheus
     spec:
       serviceAccountName: prometheus
+      securityContext:
+        fsGroup: 65534
+        runAsUser: 65534
+        runAsNonRoot: true
       containers:
       - name: prometheus
         image: prom/prometheus:v2.45.0
@@ -125,6 +129,7 @@ spec:
       - name: storage
         persistentVolumeClaim:
           claimName: prometheus-storage
+
 ---
 # Prometheus Service
 apiVersion: v1
