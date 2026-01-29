@@ -218,6 +218,23 @@ spec:
     targetPort: 9093
     nodePort: 30093
 ---
+# Grafana Provisioning ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-datasources
+  namespace: monitoring
+data:
+  prometheus.yaml: |
+    apiVersion: 1
+    datasources:
+      - name: Prometheus
+        type: prometheus
+        access: proxy
+        url: http://prometheus:9090
+        isDefault: true
+        editable: true
+---
 # Grafana Deployment
 apiVersion: apps/v1
 kind: Deployment
@@ -244,6 +261,8 @@ spec:
           value: admin
         - name: GF_SECURITY_ADMIN_PASSWORD
           value: admin123
+        - name: GF_PATHS_PROVISIONING
+          value: /etc/grafana/provisioning        
         resources:
           requests:
             cpu: 100m
@@ -254,9 +273,14 @@ spec:
         volumeMounts:
         - name: storage
           mountPath: /var/lib/grafana
+        - name: datasources
+          mountPath: /etc/grafana/provisioning/datasources
       volumes:
       - name: storage
         emptyDir: {}
+      - name: datasources
+        configMap:
+          name: grafana-datasources
 ---
 # Grafana Service
 apiVersion: v1
