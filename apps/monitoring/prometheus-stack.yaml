@@ -127,8 +127,7 @@ spec:
         configMap:
           name: prometheus-config
       - name: storage
-        persistentVolumeClaim:
-          claimName: prometheus-storage
+        emptyDir: {}
 
 ---
 # Prometheus Service
