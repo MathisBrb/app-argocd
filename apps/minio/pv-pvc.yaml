@@ -11,7 +11,7 @@ spec:
   persistentVolumeReclaimPolicy: Retain
   nfs:
     # ===== A MODIFIER =====
-    server: "10.202.0.206"       # Ex: 192.168.1.100
+    server: "10.202.0.124"       # Ex: 192.168.1.100
     path: "/srv/nfs/minio"       # Ex: /export/backups/velero
     # ======================
 ---
