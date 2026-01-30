@@ -1,27 +1,91 @@
-configuration:
-  provider: aws  # Restic = aws:s3 compatible
-  backupStorageLocation:
-    bucket: velero-repo  # Nom logique
-    config:
-      region: us-east-1  # Dummy pour restic
-      s3ForcePathStyle: "true"
-      s3Url: "sftp://backup-server-ip-or-hostname:22/backup/velero-repo"  # Ton serveur Debian !
-  volumeSnapshotLocation:
-    config:
-      region: us-east-1  # CSI Cinder snapshots
+---
+# Velero Helm values - Backup complet du cluster
+# Backend: MinIO (S3-compatible) sur NFS
 
-credentials:
-  useSecret: true  # SSH key dans Secret
+image:
+  repository: velero/velero
+  tag: v1.14.1
 
 initContainers:
   - name: velero-plugin-for-aws
-    image: velero/velero-plugin-for-aws:v1.10.0  # Restic
+    image: velero/velero-plugin-for-aws:v1.10.1
+    imagePullPolicy: IfNotPresent
     volumeMounts:
       - mountPath: /target
         name: plugins
 
-serviceAccount:
-  create: true
-  name: velero
-  annotations:
-    iam.amazonaws.com/role: "dummy"  # Ignoré pour restic
+# Configuration du provider de backup
+configuration:
+  backupStorageLocation:
+    - name: default
+      provider: aws
+      bucket: velero
+      default: true
+      config:
+        region: minio-local
+        s3ForcePathStyle: "true"
+        s3Url: http://minio.velero.svc.cluster.local:9000
+
+  volumeSnapshotLocation:
+    - name: default
+      provider: aws
+      config:
+        region: minio-local
+
+  # Activer node-agent (Kopia) pour le backup des volumes
+  uploaderType: kopia
+
+  defaultVolumesToFsBackup: true
+
+# Credentials pour se connecter a MinIO
+credentials:
+  useSecret: true
+  existingSecret: velero-credentials
+
+# Node-agent (ex-restic) pour les backups de volumes
+deployNodeAgent: true
+nodeAgent:
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+
+# Resources du serveur Velero
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: 1000m
+    memory: 512Mi
+
+# Schedules de backup automatiques
+schedules:
+  # Backup complet quotidien - retention 7 jours
+  daily-full-backup:
+    disabled: false
+    schedule: "0 2 * * *"
+    useOwnerReferencesInBackup: false
+    template:
+      ttl: 168h
+      includedNamespaces:
+        - "*"
+      defaultVolumesToFsBackup: true
+      snapshotVolumes: false
+      storageLocation: default
+
+  # Backup hebdomadaire - retention 30 jours
+  weekly-full-backup:
+    disabled: false
+    schedule: "0 3 * * 0"
+    useOwnerReferencesInBackup: false
+    template:
+      ttl: 720h
+      includedNamespaces:
+        - "*"
+      defaultVolumesToFsBackup: true
+      snapshotVolumes: false
+      storageLocation: default
