@@ -1,19 +1,14 @@
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: monitoring
----
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: kube-prometheus-stack
+  name: kube-prometheus-stack  # C'est le nom que le Bootstrap donnera à cette sous-partie
   namespace: argocd
 spec:
   project: monitoring
   source:
     repoURL: https://github.com/MathisBrb/app-argocd.git
     targetRevision: main
-    path: apps/monitoring
+    path: apps/monitoring      # Le Bootstrap ira chercher les vrais fichiers ici
   destination:
     server: https://kubernetes.default.svc
     namespace: monitoring
@@ -21,3 +16,5 @@ spec:
     automated:
       prune: true
       selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
