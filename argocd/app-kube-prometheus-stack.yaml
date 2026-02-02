@@ -7,5 +7,14 @@ spec:
   project: monitoring
   source:
     repoURL: https://github.com/MathisBrb/app-argocd.git
-    targetRevision
-
+    targetRevision: main
+    path: apps/monitoring      # On pointe vers le dossier contenant les manifests du monitoring
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
