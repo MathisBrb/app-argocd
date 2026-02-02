@@ -1,17 +1,19 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: kube-prometheus-stack
+  name: bootstrap
   namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
 spec:
-  project: monitoring
+  project: default
   source:
     repoURL: https://github.com/MathisBrb/app-argocd.git
     targetRevision: main
-    path: apps/monitoring
+    path: argocd  # <--- C'est ici que la magie opère (il surveille le dossier des fiches)
   destination:
     server: https://kubernetes.default.svc
-    namespace: monitoring
+    namespace: argocd
   syncPolicy:
     automated:
       prune: true
