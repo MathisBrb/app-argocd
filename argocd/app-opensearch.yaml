@@ -1,0 +1,28 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: opensearch
+  namespace: argocd
+spec:
+  project: default
+  sources:
+    # Source 1: Le Chart Helm officiel
+    - repoURL: https://opensearch-project.github.io/helm-charts
+      chart: opensearch
+      targetRevision: 2.17.0
+      helm:
+        valueFiles:
+          - $values/apps/opensearch/values.yaml
+    # Source 2: Ton repo GitHub qui contient le fichier values.yaml
+    - repoURL: https://github.com/MathisBrb/app-argocd.git
+      targetRevision: main
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: opensearch
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
