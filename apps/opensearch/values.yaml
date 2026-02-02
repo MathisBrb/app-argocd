@@ -1,0 +1,27 @@
+---
+# Configuration pour un cluster simple (1 seul noeud)
+clusterName: "opensearch-cluster"
+nodeGroup: "master"
+
+# Important pour que ça démarre sur un petit cluster
+replicas: 1
+singleNode: true
+
+# Ressources (A ajuster selon ton cluster, mais c'est le minimum vital)
+resources:
+  requests:
+    cpu: "500m"
+    memory: "1Gi"
+  limits:
+    cpu: "1000m"
+    memory: "2Gi"
+
+# Stockage
+persistence:
+  enabled: true
+  size: 10Gi
+
+# Désactiver la sécurité complexe pour commencer (Optionnel mais simplifie la vie au début)
+config:
+  opensearch.yml:
+    plugins.security.disabled: true
