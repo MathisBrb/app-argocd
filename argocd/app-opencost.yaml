@@ -10,17 +10,18 @@ spec:
     chart: opencost
     targetRevision: 1.32.0
     helm:
-      parameters:
-        # 👇 CORRECTION ICI : On ajoute "opencost." devant 👇
-        - name: opencost.prometheus.internal.enabled
-          value: "false"
-        - name: opencost.prometheus.external.url
-          value: "http://prometheus.monitoring.svc.cluster.local:9090"
-        # 👆 C'est ça qui va diriger OpenCost vers ton vrai Prometheus 👆
+      # 👇 ON UTILISE CETTE MÉTHODE PLUS FIABLE 👇
+      values: |
+        opencost:
+          prometheus:
+            internal:
+              enabled: false
+            external:
+              url: "http://prometheus.monitoring.svc.cluster.local:9090"
+        service:
+          type: LoadBalancer
+      # 👆 FIN DU BLOC VALUES 👆
 
-        # Pour le service LoadBalancer (ça c'est bon, c'est souvent à la racine)
-        - name: service.type
-          value: "LoadBalancer"
   destination:
     server: https://kubernetes.default.svc
     namespace: opencost
