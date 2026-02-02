@@ -6,7 +6,8 @@ metadata:
 spec:
   project: monitoring
   source:
-    repoURL: git@github.com:MathisBrb/app-argocd.git
+    # CORRIGÉ EN HTTPS ICI
+    repoURL: https://github.com/MathisBrb/app-argocd.git
     targetRevision: main
     path: apps/minio
   destination:
