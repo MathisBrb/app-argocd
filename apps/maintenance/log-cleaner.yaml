@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: log-cleaner
+  namespace: kube-system
+  labels:
+    app: log-cleaner
+spec:
+  selector:
+    matchLabels:
+      app: log-cleaner
+  template:
+    metadata:
+      labels:
+        app: log-cleaner
+    spec:
+      # On permet au pod de voir les processus host si besoin (optionnel mais utile pour le debug)
+      hostPID: true
+      containers:
+      - name: log-cleaner
+        image: alpine:latest
+        command: ["/bin/sh", "-c"]
+        args:
+          - |
+            echo "🧹 Démarrage du nettoyeur de logs..."
+            while true; do
+              echo "🕒 $(date): Nettoyage en cours..."
+              
+              # 1. Nettoyage des logs des conteneurs (Docker/Containerd)
+              # On cherche tous les fichiers .log de plus de 100Mo et on les vide
+              find /var/log/pods -name "*.log" -size +100M -exec sh -c 'echo "" > "{}"' \;
+              
+              # 2. Nettoyage du Journal Systemd (garde seulement 12h de logs système)
+              # Note : Nécessite que le dossier /var/log/journal soit monté
+              # journalctl --vacuum-time=12h (Commenté car nécessite l'accès dbus, on reste sur du fichier simple pour l'instant)
+
+              echo "✅ Nettoyage terminé. Pause de 12h."
+              sleep 43200 # 12 heures en secondes
+            done
+        securityContext:
+          privileged: true  # Nécessaire pour toucher aux fichiers du système
+        volumeMounts:
+        - name: var-log
+          mountPath: /var/log
+        - name: var-lib-docker
+          mountPath: /var/lib/docker # Au cas où tu utilises Docker
+        - name: var-lib-containerd
+          mountPath: /var/lib/containerd # Au cas où tu utilises Containerd
+      volumes:
+      - name: var-log
+        hostPath:
+          path: /var/log
+      - name: var-lib-docker
+        hostPath:
+          path: /var/lib/docker
+      - name: var-lib-containerd
+        hostPath:
+          path: /var/lib/containerd

@@ -1,0 +1,18 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: maintenance
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/MathisBrb/app-argocd.git
+    targetRevision: main
+    path: apps/maintenance
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kube-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
