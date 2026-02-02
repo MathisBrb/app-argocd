@@ -11,12 +11,14 @@ spec:
     targetRevision: 1.32.0
     helm:
       # 👇 ON UTILISE CETTE MÉTHODE PLUS FIABLE 👇
+     helm:
       values: |
         opencost:
           prometheus:
             internal:
               enabled: false
             external:
+              enabled: true  # 👈 C'EST CETTE LIGNE QUI MANQUAIT !
               url: "http://prometheus.monitoring.svc.cluster.local:9090"
         service:
           type: LoadBalancer
