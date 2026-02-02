@@ -11,11 +11,14 @@ spec:
     targetRevision: 1.32.0
     helm:
       parameters:
-        - name: prometheus.internal.enabled
+        # 👇 CORRECTION ICI : On ajoute "opencost." devant 👇
+        - name: opencost.prometheus.internal.enabled
           value: "false"
-        - name: prometheus.external.url
+        - name: opencost.prometheus.external.url
           value: "http://prometheus.monitoring.svc.cluster.local:9090"
-        # AJOUTER CECI POUR METALLB 👇
+        # 👆 C'est ça qui va diriger OpenCost vers ton vrai Prometheus 👆
+
+        # Pour le service LoadBalancer (ça c'est bon, c'est souvent à la racine)
         - name: service.type
           value: "LoadBalancer"
   destination:
