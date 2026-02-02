@@ -8,14 +8,16 @@ spec:
   source:
     repoURL: https://opencost.github.io/opencost-helm-chart
     chart: opencost
-    targetRevision: 1.32.0  # Version stable récente
+    targetRevision: 1.32.0
     helm:
       parameters:
-        # On dit à OpenCost d'utiliser ton Prometheus existant au lieu d'en installer un autre
         - name: prometheus.internal.enabled
           value: "false"
         - name: prometheus.external.url
           value: "http://prometheus.monitoring.svc.cluster.local:9090"
+        # AJOUTER CECI POUR METALLB 👇
+        - name: service.type
+          value: "LoadBalancer"
   destination:
     server: https://kubernetes.default.svc
     namespace: opencost
