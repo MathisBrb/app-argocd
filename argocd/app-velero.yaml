@@ -14,8 +14,8 @@ spec:
         releaseName: velero
         valueFiles:
           - $values/apps/velero/values-prod.yaml
-    # Source 2: Repo Git contenant les values et le secret
-    - repoURL: git@github.com:MathisBrb/app-argocd.git
+    # Source 2: Repo Git contenant les values et le secret (CORRIGÉ EN HTTPS)
+    - repoURL: https://github.com/MathisBrb/app-argocd.git
       targetRevision: main
       ref: values
   destination:
