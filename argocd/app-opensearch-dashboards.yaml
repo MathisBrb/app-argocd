@@ -13,15 +13,11 @@ spec:
       parameters:
         - name: opensearchHosts
           value: "http://opensearch-cluster-master.opensearch.svc.cluster.local:9200"
-        - name: config.opensearch_dashboards.yml.opensearch\.ssl\.verificationMode
-          value: "none"
-        - name: config.opensearch_dashboards.yml.opensearch\.username
-          value: "admin"
-        - name: config.opensearch_dashboards.yml.opensearch\.password
-          value: "admin"
-        # AJOUTER CECI POUR METALLB 👇
+        # On garde le LoadBalancer pour y accéder
         - name: service.type
           value: "LoadBalancer"
+        # 👇 ON RETIRE les utilisateurs/mots de passe car la sécurité est OFF sur le serveur
+        # Le reste n'est pas nécessaire en mode "no security"
   destination:
     server: https://kubernetes.default.svc
     namespace: opensearch
