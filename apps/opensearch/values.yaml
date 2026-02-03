@@ -18,12 +18,8 @@ persistence:
   enabled: true
   size: 20Gi
 
-# ✅ DÉSACTIVER COMPLÈTEMENT LA SÉCURITÉ POUR L'INSTANT
-config:
-  opensearch.yml:
-    cluster.name: opensearch-cluster
-    node.name: opensearch-cluster-master-0
-    plugins.security.disabled: true
+# Ne pas toucher à config, utiliser les valeurs par défaut du chart
+# qui ont déjà la structure correcte
 
 env:
   - name: OPENSEARCH_JAVA_OPTS
