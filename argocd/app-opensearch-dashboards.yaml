@@ -10,14 +10,23 @@ spec:
     chart: opensearch-dashboards
     targetRevision: 2.15.0
     helm:
-      parameters:
-        - name: opensearchHosts
-          value: "http://opensearch-cluster-master.opensearch.svc.cluster.local:9200"
-        - name: service.type
-          value: "LoadBalancer"
-        # 👇 ON AJOUTE ÇA POUR TUER LA PAGE DE LOGIN 👇
-        - name: config.opensearch_dashboards.yml.opensearch_security.enabled
-          value: "false"
+      # 👇 LE BLOC MAGIQUE POUR TOUT DÉBLOQUER 👇
+      values: |
+        opensearchHosts: "http://opensearch-cluster-master.opensearch.svc.cluster.local:9200"
+        
+        service:
+          type: LoadBalancer
+
+        config:
+          opensearch_dashboards.yml:
+            server.name: opensearch-dashboards
+            # On DÉSACTIVE le module de sécurité côté Dashboard
+            opensearch_security.enabled: false
+            # On désactive la vérification SSL
+            opensearch.ssl.verificationMode: none
+            # On force le cookie en non-sécurisé (important car tu n'es pas en HTTPS)
+            opensearch_security.cookie.secure: false
+
   destination:
     server: https://kubernetes.default.svc
     namespace: opensearch
