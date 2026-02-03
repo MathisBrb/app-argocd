@@ -10,19 +10,16 @@ spec:
     chart: opencost
     targetRevision: 1.32.0
     helm:
-      # 👇 ON UTILISE CETTE MÉTHODE PLUS FIABLE 👇
-     helm:
-      values: |
+      values: |\
         opencost:
           prometheus:
             internal:
               enabled: false
             external:
-              enabled: true  # 👈 C'EST CETTE LIGNE QUI MANQUAIT !
+              enabled: true
               url: "http://prometheus.monitoring.svc.cluster.local:9090"
         service:
           type: LoadBalancer
-      # 👆 FIN DU BLOC VALUES 👆
 
   destination:
     server: https://kubernetes.default.svc
