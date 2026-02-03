@@ -2,8 +2,13 @@
 clusterName: "opensearch-cluster"
 nodeGroup: "master"
 singleNode: true
-masterService: "opensearch-cluster-master"
 
+# 👇 CORRECTION MAJEURE ICI : Structure de l'image
+image:
+  repository: opensearchproject/opensearch
+  tag: "2.11.1"
+
+# Rôles nécessaires pour un noeud unique
 roles:
   - master
   - ingest
@@ -12,46 +17,27 @@ roles:
 
 replicas: 1
 
-image: opensearchproject/opensearch
-imageTag: "2.11.1"
-
 resources:
   requests:
-    cpu: "1000m"
+    cpu: "500m"  # J'ai baissé un peu pour que ça passe large sur ton cluster
     memory: "2Gi"
   limits:
-    cpu: "2000m"
+    cpu: "1000m"
     memory: "4Gi"
 
 persistence:
   enabled: true
   size: 20Gi
 
+# Configuration pour DÉSACTIVER la sécurité (SSL/Login)
 config:
   opensearch.yml: |
     cluster.name: opensearch-cluster
     node.name: opensearch-cluster-master-0
     network.host: 0.0.0.0
-    plugins.security.disabled: true
+    plugins.security.disabled: true  # 👈 C'est la clé pour éviter le crash SSL
 
-livenessProbe:
-  tcpSocket:
-    port: 9200
-  initialDelaySeconds: 60
-  periodSeconds: 10
-
-readinessProbe:
-  tcpSocket:
-    port: 9200
-  initialDelaySeconds: 60
-  periodSeconds: 10
-
-startupProbe:
-  tcpSocket:
-    port: 9200
-  failureThreshold: 30
-  periodSeconds: 5
-
+# Services et Probes
 service:
   type: ClusterIP
   port: 9200
