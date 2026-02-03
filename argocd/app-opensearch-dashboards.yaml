@@ -13,11 +13,11 @@ spec:
       parameters:
         - name: opensearchHosts
           value: "http://opensearch-cluster-master.opensearch.svc.cluster.local:9200"
-        # On garde le LoadBalancer pour y accéder
         - name: service.type
           value: "LoadBalancer"
-        # 👇 ON RETIRE les utilisateurs/mots de passe car la sécurité est OFF sur le serveur
-        # Le reste n'est pas nécessaire en mode "no security"
+        # 👇 ON AJOUTE ÇA POUR TUER LA PAGE DE LOGIN 👇
+        - name: config.opensearch_dashboards.yml.opensearch_security.enabled
+          value: "false"
   destination:
     server: https://kubernetes.default.svc
     namespace: opensearch
