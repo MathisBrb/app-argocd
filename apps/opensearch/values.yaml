@@ -18,33 +18,23 @@ persistence:
   enabled: true
   size: 20Gi
 
-# ✅ CONFIG OPENSEARCH SÉCURITÉ SIMPLE
+# ✅ DÉSACTIVER COMPLÈTEMENT LA SÉCURITÉ POUR L'INSTANT
 config:
   opensearch.yml:
     cluster.name: opensearch-cluster
     node.name: opensearch-cluster-master-0
-    
-    # Sécurité
-    plugins.security.disabled: false
-    plugins.security.ssl.http.enabled: false
-    plugins.security.ssl.transport.enabled: false
-    plugins.security.allow_unsafe_democertificates: true
-    plugins.security.allow_default_init_securityindex: true
+    plugins.security.disabled: true
 
-# Variables d'environnement
 env:
-  - name: OPENSEARCH_INITIAL_ADMIN_PASSWORD
-    value: "AdminPassword123!"
   - name: OPENSEARCH_JAVA_OPTS
     value: "-Xms1g -Xmx1g"
 
-# Probes
 livenessProbe:
   httpGet:
     path: /
     port: 9200
     scheme: HTTP
-  initialDelaySeconds: 120
+  initialDelaySeconds: 60
   periodSeconds: 10
 
 readinessProbe:
@@ -52,7 +42,7 @@ readinessProbe:
     path: /
     port: 9200
     scheme: HTTP
-  initialDelaySeconds: 120
+  initialDelaySeconds: 60
   periodSeconds: 10
 
 startupProbe:
@@ -60,7 +50,7 @@ startupProbe:
     path: /
     port: 9200
     scheme: HTTP
-  failureThreshold: 60
+  failureThreshold: 30
   periodSeconds: 5
 
 service:
