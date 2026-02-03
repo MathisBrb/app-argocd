@@ -1,7 +1,16 @@
+---
 clusterName: "opensearch-cluster"
 nodeGroup: "master"
-replicas: 1
 singleNode: true
+masterService: "opensearch-cluster-master"
+
+roles:
+  - master
+  - ingest
+  - data
+  - remote_cluster_client
+
+replicas: 1
 
 image: opensearchproject/opensearch
 imageTag: "2.11.1"
@@ -18,34 +27,28 @@ persistence:
   enabled: true
   size: 20Gi
 
-# Ne pas toucher à config, utiliser les valeurs par défaut du chart
-# qui ont déjà la structure correcte
-
-env:
-  - name: OPENSEARCH_JAVA_OPTS
-    value: "-Xms1g -Xmx1g"
+config:
+  opensearch.yml: |
+    cluster.name: opensearch-cluster
+    node.name: opensearch-cluster-master-0
+    network.host: 0.0.0.0
+    plugins.security.disabled: true
 
 livenessProbe:
-  httpGet:
-    path: /
+  tcpSocket:
     port: 9200
-    scheme: HTTP
   initialDelaySeconds: 60
   periodSeconds: 10
 
 readinessProbe:
-  httpGet:
-    path: /
+  tcpSocket:
     port: 9200
-    scheme: HTTP
   initialDelaySeconds: 60
   periodSeconds: 10
 
 startupProbe:
-  httpGet:
-    path: /
+  tcpSocket:
     port: 9200
-    scheme: HTTP
   failureThreshold: 30
   periodSeconds: 5
 
