@@ -1,0 +1,41 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: fluent-bit
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://fluent.github.io/helm-charts
+    chart: fluent-bit
+    targetRevision: 0.44.0
+    helm:
+      values: |
+        config:
+          outputs: |
+            [OUTPUT]
+                Name            opensearch
+                Match           *
+                Host            opensearch-cluster-master.opensearch.svc.cluster.local
+                Port            9200
+                Index           kube-logs
+                Suppress_Type_Name On
+                tls             Off
+                # Pas de user/password car on a désactivé la sécu
+        
+        # Configuration pour lire les logs Docker/Containerd
+        input:
+          tail:
+            path: /var/log/containers/*.log
+            parser: docker
+            tag: kube.*
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: logging # On le met dans un namespace dédié
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
