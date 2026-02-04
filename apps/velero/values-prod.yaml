@@ -1,91 +1,38 @@
----
-# Velero Helm values - Backup complet du cluster
-# Backend: MinIO (S3-compatible) sur NFS
+# On nettoie les anciennes configs
+initContainers: []
 
-image:
-  repository: velero/velero
-  tag: v1.14.1
-
-initContainers:
-  - name: velero-plugin-for-aws
-    image: velero/velero-plugin-for-aws:v1.10.1
-    imagePullPolicy: IfNotPresent
-    volumeMounts:
-      - mountPath: /target
-        name: plugins
-
-# Configuration du provider de backup
-configuration:
-  backupStorageLocation:
-    - name: default
-      provider: aws
-      bucket: velero
-      default: true
-      config:
-        region: minio-local
-        s3ForcePathStyle: "true"
-        s3Url: http://minio.velero.svc.cluster.local:9000
-
-  volumeSnapshotLocation:
-    - name: default
-      provider: aws
-      config:
-        region: minio-local
-
-  # Activer node-agent (Kopia) pour le backup des volumes
-  uploaderType: kopia
-
-  defaultVolumesToFsBackup: true
-
-# Credentials pour se connecter a MinIO
+# ⚠️ On désactive la gestion des secrets par Helm (c'est Vault qui gère)
 credentials:
-  useSecret: true
-  existingSecret: velero-credentials
+  useSecret: false
 
-# Node-agent (ex-restic) pour les backups de volumes
-deployNodeAgent: true
-nodeAgent:
-  resources:
-    requests:
-      cpu: 100m
-      memory: 256Mi
-    limits:
-      cpu: 1000m
-      memory: 1Gi
+configuration:
+  provider: aws
+  backupStorageLocation:
+    name: default
+    bucket: velero
+    config:
+      region: minio
+      s3ForcePathStyle: true
+      s3Url: http://minio.velero.svc:9000
+  volumeSnapshotLocation:
+    name: default
+    config:
+      region: minio
 
-# Resources du serveur Velero
-resources:
-  requests:
-    cpu: 100m
-    memory: 256Mi
-  limits:
-    cpu: 1000m
-    memory: 512Mi
+# 👇 LA CONFIGURATION VAULT 👇
+podAnnotations:
+  # On active l'injecteur
+  vault.hashicorp.com/agent-inject: "true"
+  # On précise le rôle créé tout à l'heure
+  vault.hashicorp.com/role: "velero-role"
+  # On demande le secret "secret/velero" et on veut l'écrire dans un fichier "cloud"
+  vault.hashicorp.com/agent-inject-secret-cloud: "secret/data/velero"
+  # On formate le fichier pour qu'il ressemble exactement à ce que Velero attend
+  vault.hashicorp.com/agent-inject-template-cloud: |
+    {{- with secret "secret/data/velero" -}}
+    {{ .Data.data.cloud }}
+    {{- end -}}
 
-# Schedules de backup automatiques
-schedules:
-  # Backup complet quotidien - retention 7 jours
-  daily-full-backup:
-    disabled: false
-    schedule: "0 2 * * *"
-    useOwnerReferencesInBackup: false
-    template:
-      ttl: 168h
-      includedNamespaces:
-        - "*"
-      defaultVolumesToFsBackup: true
-      snapshotVolumes: false
-      storageLocation: default
-
-  # Backup hebdomadaire - retention 30 jours
-  weekly-full-backup:
-    disabled: false
-    schedule: "0 3 * * 0"
-    useOwnerReferencesInBackup: false
-    template:
-      ttl: 720h
-      includedNamespaces:
-        - "*"
-      defaultVolumesToFsBackup: true
-      snapshotVolumes: false
-      storageLocation: default
+# On dit à Velero : "Ton fichier de credentials est ici"
+env:
+  AWS_SHARED_CREDENTIALS_FILE: /vault/secrets/cloud
