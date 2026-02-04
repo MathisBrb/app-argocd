@@ -1,38 +1,38 @@
-# On nettoie les anciennes configs
+# On désactive les initContainers par défaut
 initContainers: []
 
-# ⚠️ On désactive la gestion des secrets par Helm (c'est Vault qui gère)
+# On désactive la création de secret par Helm (c'est Vault qui gère)
 credentials:
   useSecret: false
 
 configuration:
-  provider: aws
+  # ⚠️ CHANGEMENT MAJEUR ICI : C'est maintenant une liste (note le tiret - )
   backupStorageLocation:
-    name: default
-    bucket: velero
-    config:
-      region: minio
-      s3ForcePathStyle: true
-      s3Url: http://minio.velero.svc:9000
+    - name: default
+      provider: aws  # <--- Le provider est déplacé ICI
+      bucket: velero
+      config:
+        region: minio
+        s3ForcePathStyle: true
+        s3Url: http://minio.velero.svc:9000
+  
+  # Pareil pour les snapshots, c'est une liste
   volumeSnapshotLocation:
-    name: default
-    config:
-      region: minio
+    - name: default
+      provider: aws # <--- Et ICI
+      config:
+        region: minio
 
-# 👇 LA CONFIGURATION VAULT 👇
+# 👇 Configuration Vault (Reste inchangée et valide)
 podAnnotations:
-  # On active l'injecteur
   vault.hashicorp.com/agent-inject: "true"
-  # On précise le rôle créé tout à l'heure
   vault.hashicorp.com/role: "velero-role"
-  # On demande le secret "secret/velero" et on veut l'écrire dans un fichier "cloud"
   vault.hashicorp.com/agent-inject-secret-cloud: "secret/data/velero"
-  # On formate le fichier pour qu'il ressemble exactement à ce que Velero attend
   vault.hashicorp.com/agent-inject-template-cloud: |
     {{- with secret "secret/data/velero" -}}
     {{ .Data.data.cloud }}
     {{- end -}}
 
-# On dit à Velero : "Ton fichier de credentials est ici"
+# On pointe vers le fichier généré par Vault
 env:
   AWS_SHARED_CREDENTIALS_FILE: /vault/secrets/cloud
