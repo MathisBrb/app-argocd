@@ -16,24 +16,38 @@ spec:
     metadata:
       labels:
         app: minio
+      annotations:
+        # 👇 1. CONFIGURATION VAULT 👇
+        # On active l'injection de secrets
+        vault.hashicorp.com/agent-inject: "true"
+        # On précise le rôle qu'on a créé tout à l'heure
+        vault.hashicorp.com/role: "minio-role"
+        # On demande à Vault de lire le secret "secret/data/minio"
+        vault.hashicorp.com/agent-inject-secret-config: "secret/data/minio"
+        # On transforme le JSON de Vault en variables d'environnement Shell
+        vault.hashicorp.com/agent-inject-template-config: |
+          {{- with secret "secret/data/minio" -}}
+          export MINIO_ROOT_USER="{{ .Data.data.rootUser }}"
+          export MINIO_ROOT_PASSWORD="{{ .Data.data.rootPassword }}"
+          {{- end -}}
     spec:
+      serviceAccountName: default # Le rôle Vault est lié au compte 'default'
       containers:
         - name: minio
           image: minio/minio:RELEASE.2024-06-13T22-53-53Z
+          # 👇 2. COMMANDE MODIFIÉE 👇
+          # On charge le fichier injecté par Vault AVANT de lancer le serveur
           command:
-            - minio
-            - server
-            - /data
-            - --console-address
-            - ":9001"
+            - /bin/sh
+            - -c
+            - |
+              source /vault/secrets/config && minio server /data --console-address ":9001"
           ports:
             - containerPort: 9000
               name: api
             - containerPort: 9001
               name: console
-          envFrom:
-            - secretRef:
-                name: minio-credentials
+          # ❌ J'ai supprimé la section envFrom ici car Vault s'en occupe
           volumeMounts:
             - name: data
               mountPath: /data
@@ -58,24 +72,4 @@ spec:
               memory: 512Mi
       volumes:
         - name: data
-          persistentVolumeClaim:
-            claimName: minio-nfs-pvc
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: minio
-  namespace: velero
-  labels:
-    app: minio
-spec:
-  type: ClusterIP
-  ports:
-    - port: 9000
-      targetPort: 9000
-      name: api
-    - port: 9001
-      targetPort: 9001
-      name: console
-  selector:
-    app: minio
+          persistent
