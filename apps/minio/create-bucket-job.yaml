@@ -3,6 +3,9 @@ kind: Job
 metadata:
   name: minio-create-bucket
   namespace: velero
+  annotations:
+    # Change cette valeur pour forcer ArgoCD à recréer le Job (spec.template est immutable)
+    triforce.dev/recreate: "2026-02-05-1558"
 spec:
   backoffLimit: 5
   template:
