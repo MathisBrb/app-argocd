@@ -1,5 +1,12 @@
-# On désactive les initContainers par défaut
-initContainers: []
+# Plugins nécessaires au support S3 (MinIO)
+# Le chart Velero attend une liste "initContainers" pour injecter les plugins.
+initContainers:
+  - name: velero-plugin-for-aws
+    image: velero/velero-plugin-for-aws:v1.9.2
+    imagePullPolicy: IfNotPresent
+    volumeMounts:
+      - mountPath: /target
+        name: plugins
 
 # On désactive la création de secret par Helm (c'est Vault qui gère)
 credentials:
@@ -15,25 +22,13 @@ configuration:
       config:
         region: minio
         s3ForcePathStyle: true
-        # URL interne au cluster (service minio dans le namespace velero)
         s3Url: http://minio.velero.svc:9000
 
-  # On laisse VSL présent (utile si tu ajoutes plus tard un snapshotter CSI)
   volumeSnapshotLocation:
     - name: default
       provider: aws
       config:
         region: minio
-
-# Plugins nécessaires au support S3 (MinIO) + snapshots (optionnel)
-# Le chart Velero attend une liste "initContainers" pour injecter les plugins.
-initContainers:
-  - name: velero-plugin-for-aws
-    image: velero/velero-plugin-for-aws:v1.9.2
-    imagePullPolicy: IfNotPresent
-    volumeMounts:
-      - mountPath: /target
-        name: plugins
 
 # 👇 Configuration Vault (injection du fichier /vault/secrets/cloud)
 podAnnotations:
@@ -45,12 +40,5 @@ podAnnotations:
     {{ .Data.data.cloud }}
     {{- end -}}
 
-# On pointe Velero vers le fichier généré par Vault
-# Le contenu attendu est un format INI AWS, ex:
-# [default]
-# aws_access_key_id=...
-# aws_secret_access_key=...
 env:
   AWS_SHARED_CREDENTIALS_FILE: /vault/secrets/cloud
-
-# Astuce: si tu veux exclure certains namespaces, configure "schedules" ou des BackupStorageLocation dédiés.
