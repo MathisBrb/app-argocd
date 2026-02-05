@@ -6,24 +6,36 @@ credentials:
   useSecret: false
 
 configuration:
-  # ⚠️ CHANGEMENT MAJEUR ICI : C'est maintenant une liste (note le tiret - )
+  # Velero utilisera ce BSL pour écrire les backups dans MinIO (bucket "velero")
   backupStorageLocation:
     - name: default
-      provider: aws  # <--- Le provider est déplacé ICI
+      provider: aws
       bucket: velero
+      default: true
       config:
         region: minio
         s3ForcePathStyle: true
+        # URL interne au cluster (service minio dans le namespace velero)
         s3Url: http://minio.velero.svc:9000
-  
-  # Pareil pour les snapshots, c'est une liste
+
+  # On laisse VSL présent (utile si tu ajoutes plus tard un snapshotter CSI)
   volumeSnapshotLocation:
     - name: default
-      provider: aws # <--- Et ICI
+      provider: aws
       config:
         region: minio
 
-# 👇 Configuration Vault (Reste inchangée et valide)
+# Plugins nécessaires au support S3 (MinIO) + snapshots (optionnel)
+# Le chart Velero attend une liste "initContainers" pour injecter les plugins.
+initContainers:
+  - name: velero-plugin-for-aws
+    image: velero/velero-plugin-for-aws:v1.9.2
+    imagePullPolicy: IfNotPresent
+    volumeMounts:
+      - mountPath: /target
+        name: plugins
+
+# 👇 Configuration Vault (injection du fichier /vault/secrets/cloud)
 podAnnotations:
   vault.hashicorp.com/agent-inject: "true"
   vault.hashicorp.com/role: "velero-role"
@@ -33,6 +45,12 @@ podAnnotations:
     {{ .Data.data.cloud }}
     {{- end -}}
 
-# On pointe vers le fichier généré par Vault
+# On pointe Velero vers le fichier généré par Vault
+# Le contenu attendu est un format INI AWS, ex:
+# [default]
+# aws_access_key_id=...
+# aws_secret_access_key=...
 env:
   AWS_SHARED_CREDENTIALS_FILE: /vault/secrets/cloud
+
+# Astuce: si tu veux exclure certains namespaces, configure "schedules" ou des BackupStorageLocation dédiés.
