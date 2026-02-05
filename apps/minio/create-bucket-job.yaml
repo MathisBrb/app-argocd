@@ -5,11 +5,17 @@ metadata:
   namespace: velero
   annotations:
     # Change cette valeur pour forcer ArgoCD à recréer le Job (spec.template est immutable)
-    triforce.dev/recreate: "2026-02-05-1558"
+    triforce.dev/recreate: "2026-02-05-1602"
 spec:
   backoffLimit: 5
+  # Certaines versions/serveurs exigent des labels + selector explicites.
+  selector:
+    matchLabels:
+      job-name: minio-create-bucket
   template:
     metadata:
+      labels:
+        job-name: minio-create-bucket
       annotations:
         vault.hashicorp.com/agent-inject: "true"
         vault.hashicorp.com/role: "minio-role"
