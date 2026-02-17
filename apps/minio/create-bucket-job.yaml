@@ -4,11 +4,10 @@ metadata:
   name: minio-create-bucket
   namespace: velero
   annotations:
-    # Change cette valeur pour forcer ArgoCD à recréer le Job (spec.template est immutable)
-    triforce.dev/recreate: "2026-02-05-1602"
+    # Change la date pour forcer la relance du job
+    triforce.dev/recreate: "no-vault-v1"
 spec:
   backoffLimit: 5
-  # Certaines versions/serveurs exigent des labels + selector explicites.
   selector:
     matchLabels:
       job-name: minio-create-bucket
@@ -16,26 +15,23 @@ spec:
     metadata:
       labels:
         job-name: minio-create-bucket
-      annotations:
-        vault.hashicorp.com/agent-inject: "true"
-        vault.hashicorp.com/role: "minio-role"
-        vault.hashicorp.com/agent-inject-secret-config: "secret/data/minio"
-        vault.hashicorp.com/agent-inject-template-config: |
-          {{- with secret "secret/data/minio" -}}
-          export MINIO_ROOT_USER="{{ .Data.data.rootUser }}"
-          export MINIO_ROOT_PASSWORD="{{ .Data.data.rootPassword }}"
-          {{- end -}}
+      # ❌ Plus d'annotations Vault
     spec:
       restartPolicy: OnFailure
       containers:
         - name: mc
           image: minio/mc:RELEASE.2024-06-12T14-34-03Z
+          env:
+            - name: MINIO_ROOT_USER
+              value: "admin"
+            - name: MINIO_ROOT_PASSWORD
+              value: "password123"
           command:
             - /bin/sh
             - -c
             - |
               set -e
-              source /vault/secrets/config
+              # On utilise les variables d'env définies juste au dessus
               until mc alias set myminio http://minio.velero.svc.cluster.local:9000 "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD"; do
                 echo "Waiting for MinIO..."
                 sleep 5
