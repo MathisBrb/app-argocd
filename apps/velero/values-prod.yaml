@@ -1,5 +1,4 @@
-# Plugins nécessaires au support S3 (MinIO)
-# Le chart Velero attend une liste "initContainers" pour injecter les plugins.
+# Plugins
 initContainers:
   - name: velero-plugin-for-aws
     image: velero/velero-plugin-for-aws:v1.9.2
@@ -8,12 +7,16 @@ initContainers:
       - mountPath: /target
         name: plugins
 
-# On désactive la création de secret par Helm (c'est Vault qui gère)
+# 👇 CHANGEMENT ICI : On active le secret standard et on met le contenu
 credentials:
-  useSecret: false
+  useSecret: true
+  secretContents:
+    cloud: |
+      [default]
+      aws_access_key_id = admin
+      aws_secret_access_key = password123
 
 configuration:
-  # Velero utilisera ce BSL pour écrire les backups dans MinIO (bucket "velero")
   backupStorageLocation:
     - name: default
       provider: aws
@@ -23,22 +26,10 @@ configuration:
         region: minio
         s3ForcePathStyle: true
         s3Url: http://minio.velero.svc:9000
-
   volumeSnapshotLocation:
     - name: default
       provider: aws
       config:
         region: minio
 
-# 👇 Configuration Vault (injection du fichier /vault/secrets/cloud)
-podAnnotations:
-  vault.hashicorp.com/agent-inject: "true"
-  vault.hashicorp.com/role: "velero-role"
-  vault.hashicorp.com/agent-inject-secret-cloud: "secret/data/velero"
-  vault.hashicorp.com/agent-inject-template-cloud: |
-    {{- with secret "secret/data/velero" -}}
-    {{ .Data.data.cloud }}
-    {{- end -}}
-
-env:
-  AWS_SHARED_CREDENTIALS_FILE: /vault/secrets/cloud
+# ❌ J'ai supprimé tout le bloc 'podAnnotations' (Vault) et 'env'
