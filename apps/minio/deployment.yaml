@@ -16,27 +16,24 @@ spec:
     metadata:
       labels:
         app: minio
-      annotations:
-        vault.hashicorp.com/agent-inject: "true"
-        vault.hashicorp.com/role: "minio-role"
-        vault.hashicorp.com/agent-inject-secret-config: "secret/data/minio"
-        vault.hashicorp.com/agent-inject-template-config: |
-          {{- with secret "secret/data/minio" -}}
-          export MINIO_ROOT_USER="{{ .Data.data.rootUser }}"
-          export MINIO_ROOT_PASSWORD="{{ .Data.data.rootPassword }}"
-          {{- end -}}
+      # ❌ J'ai supprimé toutes les annotations Vault ici
     spec:
       serviceAccountName: default
       containers:
         - name: minio
           image: minio/minio:RELEASE.2024-06-13T22-53-53Z
+          env:
+            # 👇 On définit les accès DIRECTEMENT ici
+            - name: MINIO_ROOT_USER
+              value: "admin"
+            - name: MINIO_ROOT_PASSWORD
+              value: "password123"
           command:
             - /bin/sh
             - -c
             - |
-              set -e
-              source /vault/secrets/config
-              exec minio server /data --console-address ":9001"
+              # Plus de 'source /vault/...', on lance direct !
+              minio server /data --console-address ":9001"
           ports:
             - containerPort: 9000
               name: api
