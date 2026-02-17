@@ -10,19 +10,36 @@ spec:
     chart: opencost
     targetRevision: 1.32.0
     helm:
+      # Le bloc values doit être une chaîne de caractères (le pipe | est important)
       values: |
         opencost:
+          # Configuration des prix pour Infra On-Premise
+          customPricing:
+            enabled: true
+            costModel:
+              description: "Coûts Infra Interne"
+              currencyCode: "EUR"
+              CPU: 0.04            # ~29€ / mois par vCPU
+              RAM: 0.015           # ~11€ / mois par Go RAM
+              storage: 0.0005      # ~0.36€ / mois par Go Stockage
+              zone: "default"
+          
+          # Configuration Prometheus (On utilise celui de ta stack monitoring)
           prometheus:
             internal:
               enabled: false
             external:
               enabled: true
               url: "http://prometheus.monitoring.svc.cluster.local:9090"
+        
+        # Exposition du service OpenCost
         service:
           type: LoadBalancer
+
   destination:
     server: https://kubernetes.default.svc
     namespace: opencost
+  
   syncPolicy:
     automated:
       prune: true
